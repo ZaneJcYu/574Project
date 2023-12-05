@@ -1,3 +1,4 @@
+
 library(e1071)
 library(MASS)
 setwd('/574Project/')
@@ -48,7 +49,7 @@ lmcv <- function(formula., D, method=c("lm", "logit"), folds=10, seeds=1){
     ## calculate estimates based on partitions for training
     if(method=="lm") {
       trlm = lm(formula., data=train)
-      
+  
       ## calculate CV error based on the estimates and the CV partition
       hat_label = sign(predict(trlm, cv))
     }
@@ -56,6 +57,7 @@ lmcv <- function(formula., D, method=c("lm", "logit"), folds=10, seeds=1){
     if(method=="glm"){
       train[, 1] <- 1*(train[, 1]==1) + 0*(train[, 1]==-1)
       trglm = glm(formula., data=train, family = binomial(link="logit"))
+      
       ## calculate CV error based on the estimates and the CV partition
       hat_label = sign(predict(trglm, cv, type="response")-0.5)
     }
