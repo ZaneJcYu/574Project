@@ -7,46 +7,45 @@ library(dplyr)
 set.seed(1)
 
 # Read in data
-data <- read.csv("full_set.csv")
-names(data)[1] <- "cell_type"
-data$cell_type <- as.factor(data$cell_type)
+data <- read.csv("CD8Tcell_screened1.csv")
+names(data)[2] <- "condition"
+data$condition <- as.factor(data$condition)
+train <- data[which(data$train == 1),]
+test <- data[which(data$train == 0),]
+
+# Get rid of train/test indicators in train and test sets
+train <- select(train, -413)
+test <- select(test, -413)
 
 # MARS Model
-mars <- earth(cell_type~., data=data, degree=1, nprune=12)
+mars <- earth(condition~., data=train[,-1], degree=1, nprune=22)
 
 # Predictions on Training Data
-yhat <- predict(mars, type="class")
+yhat <- predict(mars, newdata=test[,-1], type="class")
 
-# Training error
-train_err <- mean(yhat != data$cell_type)
-print(paste("The training error is", train_err))
+# Test error
+test_err <- mean(yhat != test$condition)
+print(paste("The test error is", test_err))
 
 # Confusion Matrix for Predictions of Training Data
-confusionMatrix(data$cell_type, as.factor(yhat))
+confusionMatrix(as.factor(yhat), test$condition)
 
 # Cross Validation Grid Search
 hyper_grid <- expand.grid(
   degree = 1:3, 
-  nprune = seq(2, 50, length.out = 10) %>% floor()
+  nprune = seq(1, 400, length.out = 20) %>% floor()
 )
 
-#fit MARS model using k-fold cross-validation
+# Fit MARS model using 10-fold cross-validation
 cv_mars <- train(
-  x = data[,-1],
-  y = data$cell_type,
+  x = train[,-1],
+  y = train$condition,
   method = "earth",
   metric = "Accuracy",
   trControl = trainControl(method = "cv", number = 10, verboseIter=TRUE),
   tuneGrid = hyper_grid
 )
-# Started around 9:30 AM
-# Ended around 3:00 PM
+# Started around 7:30 PM (12/7)
+# Ended around 8:00 PM (12/7)
 
-# 10-fold CV found that the best model had degree = 1 and nprune = 12 with 
-# an estimated avg error of 0.120028
-
-# What genes did MARS choose?
-mars %>%
-  coef() %>%
-  broom::tidy()
 
