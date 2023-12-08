@@ -3,6 +3,6 @@ datafile: "train_study.h5ad", "valid_study.h5ad"
 
 
 Brief summary of csv files
-Y: label. =1, -1
-train: choosing the training data set that was generated from "set.seed(seed=2023)" and "sample". =T, F
+Y: label. =1 (counts:541), -1 (counts:574)
+train: choosing the training data set that was generated from "set.seed(seed=2023)" and "sample". =T (counts:892), F (counts:223)
 Other columns: records of continuous gene expression levels in a numeric format.
