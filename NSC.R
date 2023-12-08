@@ -4,37 +4,38 @@ library(caret)
 set.seed(1)
 
 # Get data
-data <- read.csv("full_set.csv")
-data_x <- t(data[,-1])
-data_y <- data[,1]
+data <- read.csv("CD8Tcell_screened1.csv")
+train <- data[which(data$train==1),]
+test <- data[which(data$train==0),]
+train_x <- t(train[,-c(1,2,413)])
+train_y <- train[,2]
+test_x <- t(test[,-c(1,2,413)])
+test_y <- test[,2]
 
-# NSC with 10-fold CV
-nsc <- pamr.train(data=list(x=data_x, y=data_y))
-nsc.cv <- pamr.cv(nsc, data=list(x=data_x, y=data_y), nfold=10)
+# NSC with 10-fold CV0
+nsc <- pamr.train(data=list(x=train_x, y=train_y))
+nsc.cv <- pamr.cv(nsc, data=list(x=train_x, y=train_y), nfold=10)
 best_thresh <- nsc.cv$threshold[which.min(nsc.cv$error)]
 
-# 10-fold CV average model error estimate
-est_err <- min(nsc.cv$error)
-print(paste("The estimated model error is", round(est_err, 5)))
+# Test Predictions
+yhat <- pamr.predict(nsc, newx=test_x, threshold=best_thresh, type="class")
 
-# Training Predictions
-yhat <- pamr.predict(nsc, newx=data_x, threshold=best_thresh, type="class")
-
-# Training error
-train_err <- mean(yhat != data_y)
-print(paste("The training error is", train_err))
+# Test error
+test_err <- mean(yhat != test_y)
+print(paste("The test error is", test_err))
 
 # Confusion Matrix
-confusionMatrix(as.factor(data_y), yhat)
-
+confusionMatrix(yhat, as.factor(test_y))
 # Genes that survived thresholding
 genes <- pamr.listgenes(nsc,
-                        data=list(x=data_x, y=data_y,
-                                  genenames=rownames(data_x),
-                                  geneid=as.character(1:nrow(data_x))),
+                        data=list(x=train_x, y=train_y,
+                                  genenames=rownames(train_x),
+                                  geneid=as.character(1:nrow(train_x))),
                         threshold=best_thresh)
-for(id in genes[,1]){
-  print(rownames(data_x)[as.numeric(id)])
+gene.names <- rep(0, length(genes[,1]))
+for(idx in 1:length(genes[,1])){
+  print(rownames(train_x)[as.numeric(genes[,1][idx])])
+  gene.names[idx] <- rownames(train_x)[as.numeric(genes[,1][idx])]
 }
 print(paste(length(genes[,1]), "genes survived thresholding."))
 
