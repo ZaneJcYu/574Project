@@ -1,0 +1,199 @@
+---
+title: "Sparse SVM procedure"
+author: "Sungmin Ji"
+date: "2023-12-07"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r cars, include=FALSE}
+# Requriments
+## install anndata module in python
+
+if (!require("anndata", quietly = TRUE)) {
+  install.packages("anndata")
+}
+library(anndata)
+install_anndata(method = "auto", conda = "auto")
+
+
+if (!require("sparseSVM", quietly = TRUE)) {
+  install.packages("sparseSVM")
+}
+library(sparseSVM)
+
+
+library(Matrix)
+```
+
+
+```{r include=FALSE}
+## dataset
+df2_sd <- read.csv("CD8Tcell_screened2sd.csv")
+
+train <- df2_sd$train
+train_data <- df2_sd[train==1, -1]
+test_data <- df2_sd[train==0, -1]
+
+train_mat <- as.matrix(train_data[, -1])
+Ytr <- train_data$Y
+
+test_mat <- as.matrix(test_data[, -1])
+Yte <- test_data$Y
+
+## LASSO without interaction
+## fit one lambda
+lasso1 <- sparseSVM(train_mat, Ytr, alpha=0.1, lambda.min = 0.005)
+lasso1$weights
+lasso1$lambda
+
+fitted1 <- sapply(lasso1$lambda, FUN=function(x) predict(lasso1, test_mat, lambda=x))
+
+apply(fitted1, 2, FUN=function(x) 1-sum(diag(table(x, Yte)))/length(Yte))
+
+## five-folds CV tuning lambda
+
+
+svmcv <- function(x, y, alpha.=1, nlambda.=1e2, lambda.min.=0.001, folds=5, seeds=1){
+  nx = nrow(x)
+  if(nx < folds) stop("sample size should be larger than a given fold size")
+  
+  dim_p = ncol(x)-1
+  
+  xpar = floor(nx/folds)
+  set.seed(seeds)
+  random_par = c(sample(rep(1:folds, each = xpar), xpar*folds, replace=F),
+                 sample(1:folds, nx - xpar*folds, replace=F))
+  lambda. = exp(seq(log(lambda.min.), log(0.7), length=nlambda.))
+  cv_error_mat = matrix(0, nrow=folds, ncol=nlambda.)
+  
+  for(i in 1:folds){
+    train = x[random_par!=i, ]
+    train_label = y[random_par!=i]
+    cv = x[random_par==i, ]
+    cv_label = y[random_par==i]
+    n_cv = nrow(cv)
+    
+    ## calculate estimates based on partitions for training
+    model_fit <- sparseSVM(train, train_label, alpha=alpha., lambda=lambda.)
+
+    ## calculate CV error based on the estimates and the CV partition
+    pred_cv <- sapply(model_fit$lambda, FUN=function(x) predict(model_fit, cv, lambda=x))
+    cv_error_mat[i, ] <- apply(pred_cv, 2, FUN=function(x) 1-sum(diag(table(x, cv_label)))/n_cv)
+  }
+  
+  temp = NULL
+  temp$cvm = apply(cv_error_mat, 2, mean)
+  temp$cv_se = apply(cv_error_mat, 2, FUN=function(x) sd(x)/sqrt(folds))
+  temp$lambda = lambda.
+  temp$folds = folds
+  temp$n_sample = nx
+  temp$n_partitions = table(random_par)
+  
+  return(temp)
+}
+K=10 ## folds
+cv_folds <- svmcv(train_mat, Ytr, alpha=1, folds=K, seeds=1, lambda.min = 0.0005)
+
+cv_folds$cvm
+cv_folds$cv_se
+cv_folds$lambda
+```
+
+```{r echo=TRUE}
+## Select the optimal model using Minimum CV rule
+### model without interaction of perturbation
+
+lambda_seq <- cv_folds$lambda
+lambda_ind <- which.min(cv_folds$cvm)
+lambda <- cv_folds$lambda[lambda_ind]; cvm_min <- min(cv_folds$cvm)
+lambda;cvm_min
+
+lasso_optim <- sparseSVM(train_mat, Ytr, alpha=1, lambda=lambda_seq)
+test_fit <- predict(lasso_optim, test_mat, lambda=lambda)
+## test error
+1-sum(diag(table(test_fit, Yte)))/length(Yte)
+```
+
+
+```{r echo=TRUE}
+##Elastic net
+num_alpha = 20
+num_lambda = 1e2
+
+## Parallel computing
+if("doParallel" %in% rownames(installed.packages()) == FALSE)
+{install.packages("doParallel")
+}
+library("doParallel")
+
+if("parallel" %in% rownames(installed.packages()) == FALSE)
+{install.packages("parallel")
+}
+library("parallel")
+
+K=10 ## Number of folds CV
+for_svmcv <- function(alpha_i){
+  temp=svmcv(train_mat, Ytr, alpha=alpha_i, folds=K, lambda.min = 0.0005, seeds=1)
+  return(c(temp$cvm,temp$cv_se,temp$lambda))
+}
+
+alpha_seq <- seq(0.05, 1, length=num_alpha)
+
+ncores = 5
+cl = makeCluster(ncores)
+registerDoParallel(cl)
+
+cverror_alpha_mat <- foreach(i=1:length(alpha_seq), .combine = rbind,
+                                   .packages=c("sparseSVM", "Matrix")) %dopar% {
+  alpha_i = alpha_seq[i]
+  temp = for_svmcv(alpha_i)
+  return(temp)
+                                   }
+
+lambda_seq <- round(cverror_alpha_mat[1,(1+2*num_lambda):(3*num_lambda)],5)
+rownames(cverror_alpha_mat) <- paste0("a=", alpha_seq)
+cverror <- cverror_alpha_mat[,1:num_lambda]
+cvse <- cverror_alpha_mat[,(1+num_lambda):(2*num_lambda)]
+colnames(cverror) <- paste0("l=", lambda_seq)
+colnames(cvse) <- paste0("l=", lambda_seq)
+
+
+stopCluster(cl)
+
+apply(cverror, 1, min)
+min_ind <- apply(cverror, 1, which.min)
+alpha_ind <- which.min(apply(cverror, 1, min))
+alpha_optim <- alpha_seq[alpha_ind]
+lambda_optim <- lambda_seq[min_ind][alpha_ind]
+alpha_optim; lambda_optim
+
+### SVM with elastic net penalty
+ela_optim <- sparseSVM(train_mat, Ytr, alpha=alpha_optim, lambda=lambda_seq)
+test_fit <- predict(ela_optim, test_mat, lambda=lambda_optim)
+
+## test error
+table(test_fit, Yte)
+1-sum(diag(table(test_fit, Yte)))/length(Yte)
+```
+
+
+```{r include=FALSE}
+nrow(ela_optim$weights)
+colnames(ela_optim$weights) == round(lambda_optim,4)
+
+
+sum(ela_optim$weights[,3] != 0) 
+paste(names(sort(abs(ela_optim$weights[,3]), decreasing = T)[1:20]), collapse = ", ", sep = ",")
+
+
+set_reference <- c("ISG15", "IF16", "IFIT1", "XAF1", "MX1", "OAS1", "CMPK2", "CXCL10", "CXCL10", "CXCL11", "APOBEC3A", "CCL8")
+
+
+intersect(rownames(ela_optim$weights)[ela_optim$weights[,3] != 0], set_reference)
+```
+
