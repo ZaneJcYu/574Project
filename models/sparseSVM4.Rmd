@@ -177,8 +177,19 @@ ela_optim <- sparseSVM(train_mat, Ytr, alpha=alpha_optim, lambda=lambda_seq)
 test_fit <- predict(ela_optim, test_mat, lambda=lambda_optim)
 
 ## test error
-table(test_fit, Yte)
+confusion <- table(test_fit, Yte)
 1-sum(diag(table(test_fit, Yte)))/length(Yte)
+sum(diag(table(test_fit, Yte)))/length(Yte)
+
+## Confusion matrix
+confusion
+
+
+## the sensitivity, TPR
+confusion[2,2]/sum(confusion[,2])
+
+## the specificity, TNR
+confusion[1,1]/sum(confusion[,1])
 ```
 
 
