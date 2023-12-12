@@ -181,14 +181,15 @@ confusion <- table(test_fit, Yte)
 1-sum(diag(table(test_fit, Yte)))/length(Yte)
 sum(diag(table(test_fit, Yte)))/length(Yte)
 
-## (a) the sensitivity, TPR
+## Confusion matrix
+confusion
+
+
+## the sensitivity, TPR
 confusion[2,2]/sum(confusion[,2])
 
-## (b) the specificity, TNR
+## the specificity, TNR
 confusion[1,1]/sum(confusion[,1])
-
-## (c) FDR
-confusion[1,2]/sum(confusion[1,])
 ```
 
 
