@@ -33,7 +33,7 @@ library(Matrix)
 
 ```{r include=FALSE}
 ## dataset
-df2_sd <- read.csv("CD8Tcell_screened2sd.csv")
+df2_sd <- read.csv("CD8Tcell_screened1.csv")
 
 train <- df2_sd$train
 train_data <- df2_sd[train==1, -1]
@@ -55,10 +55,14 @@ fitted1 <- sapply(lasso1$lambda, FUN=function(x) predict(lasso1, test_mat, lambd
 
 apply(fitted1, 2, FUN=function(x) 1-sum(diag(table(x, Yte)))/length(Yte))
 
+
+```
+
+```{r echo=TRUE}
 ## five-folds CV tuning lambda
 
 
-svmcv <- function(x, y, alpha.=1, nlambda.=1e2, lambda.min.=0.001, folds=5, seeds=1){
+svmcv <- function(x, y, lambda.=NULL, alpha.=1, nlambda.=1e2, lambda.min.=0.001, folds=5, seeds=1){
   nx = nrow(x)
   if(nx < folds) stop("sample size should be larger than a given fold size")
   
@@ -68,7 +72,11 @@ svmcv <- function(x, y, alpha.=1, nlambda.=1e2, lambda.min.=0.001, folds=5, seed
   set.seed(seeds)
   random_par = c(sample(rep(1:folds, each = xpar), xpar*folds, replace=F),
                  sample(1:folds, nx - xpar*folds, replace=F))
+  if(is.null(lambda.)){
   lambda. = exp(seq(log(lambda.min.), log(0.7), length=nlambda.))
+  }else{
+    nlambda.=length(lambda.)
+  }
   cv_error_mat = matrix(0, nrow=folds, ncol=nlambda.)
   
   for(i in 1:folds){
@@ -97,7 +105,7 @@ svmcv <- function(x, y, alpha.=1, nlambda.=1e2, lambda.min.=0.001, folds=5, seed
   return(temp)
 }
 K=10 ## folds
-cv_folds <- svmcv(train_mat, Ytr, alpha=1, folds=K, seeds=1, lambda.min = 0.0005)
+cv_folds <- svmcv(train_mat, Ytr, lambda.=lasso1$lambda, alpha=1, folds=K, seeds=1, lambda.min = 0.0005)
 
 cv_folds$cvm
 cv_folds$cv_se
@@ -138,7 +146,7 @@ library("parallel")
 
 K=10 ## Number of folds CV
 for_svmcv <- function(alpha_i){
-  temp=svmcv(train_mat, Ytr, alpha=alpha_i, folds=K, lambda.min = 0.0005, seeds=1)
+  temp=svmcv(train_mat, Ytr, lambda.=lasso1$lambda, alpha=alpha_i, folds=K, lambda.min = 0.0005, seeds=1)
   return(c(temp$cvm,temp$cv_se,temp$lambda))
 }
 
@@ -172,8 +180,9 @@ alpha_optim <- alpha_seq[alpha_ind]
 lambda_optim <- lambda_seq[min_ind][alpha_ind]
 alpha_optim; lambda_optim
 
+
 ### SVM with elastic net penalty
-ela_optim <- sparseSVM(train_mat, Ytr, alpha=alpha_optim, lambda=lambda_seq)
+ela_optim <- sparseSVM(train_mat, Ytr, lambda.=lasso1$lambda, alpha=alpha_optim, lambda=lambda_seq)
 test_fit <- predict(ela_optim, test_mat, lambda=lambda_optim)
 
 ## test error
@@ -184,6 +193,7 @@ sum(diag(table(test_fit, Yte)))/length(Yte)
 ## Confusion matrix
 confusion
 
+table(Yte)
 
 ## the sensitivity, TPR
 confusion[2,2]/sum(confusion[,2])
@@ -193,7 +203,7 @@ confusion[1,1]/sum(confusion[,1])
 ```
 
 
-```{r include=FALSE}
+```{r echo=TRUE}
 nrow(ela_optim$weights)
 colnames(ela_optim$weights) == round(lambda_optim,4)
 
