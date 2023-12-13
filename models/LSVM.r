@@ -280,112 +280,60 @@ g <- function(x,y){
 }
 
 ######## file 1 ########
-'''
-print(cbind(lams, trainerr))
-lams   trainerr
-[1,] 1.000000e-03 0.01704773
-[2,] 3.162278e-03 0.01704773
-[3,] 1.000000e-02 0.01704773
-[4,] 3.162278e-02 0.01704773
-[5,] 1.000000e-01 0.01704773
-[6,] 3.162278e-01 0.01704773
-[7,] 1.000000e+00 0.01704773
-[8,] 3.162278e+00 0.01704773
-[9,] 1.000000e+01 0.01704773
-[10,] 3.162278e+01 0.01615487
-[11,] 1.000000e+02 0.01436916
-[12,] 3.162278e+02 0.01347630
-[13,] 1.000000e+03 0.01615487
-[14,] 3.162278e+03 0.02155374
-[15,] 1.000000e+04 0.10118491
-[16,] 3.162278e+04 0.93392023
-[17,] 1.000000e+05 0.93392023
-'''
-dataset <- read.csv('CD8Tcell_screened1.csv')[,-1]
-x <- dataset[,-1]
+total_dataset <- read.csv('CD8Tcell_screened1.csv')[,-1]
+dataset <- total_dataset[which(total_dataset$train==1),]
+test <- total_dataset[which(total_dataset$train==0),]
+x <- dataset[,2:411]
 y <- dataset[,1]
 trainerr <- g(x,y)
 print(c("lambda","train err"))
 print(cbind(lams, trainerr))
 fit1 <- svm(x,y,scale=F, type='C', kernel='linear',cost=1/lams[12])
-trainpredict <- predict(fit1,x,decision.values=T)
+test_x <- test[,2:411]
+test_y <- test[, 1]
+trainpredict <- predict(fit1,test_x,decision.values=T)
 trainpredict <- as.numeric(trainpredict)
 indep1 <- which(trainpredict==2)
 inden1 <- which(trainpredict==1)
 trainpredict[indep1] <-rep(1,length(indep1))
 trainpredict[inden1] <- rep(-1,length(inden1))
-total <- sum(trainpredict==y)
-tp <- length(intersect(indep1,which(y==1)))
-tn <- length(intersect(inden1,which(y==-1)))
+total <- sum(trainpredict==test_y)
+tp <- length(intersect(indep1,which(test_y==1)))
+tn <- length(intersect(inden1,which(test_y==-1)))
 fp <- length(indep1)-tp
 fn <- length(y)-tp-tn-fp
+
 ######## file 2 ########
-'''
-print(cbind(lams, trainerr2))
-              lams  trainerr2
- [1,] 1.000000e-03 0.03405374
- [2,] 3.162278e-03 0.03405374
- [3,] 1.000000e-02 0.03405374
- [4,] 3.162278e-02 0.03405374
- [5,] 1.000000e-01 0.03405374
- [6,] 3.162278e-01 0.02958945
- [7,] 1.000000e+00 0.02869660
- [8,] 3.162278e+00 0.02151202
- [9,] 1.000000e+01 0.01522029
-[10,] 3.162278e+01 0.01522029
-[11,] 1.000000e+02 0.01432744
-[12,] 3.162278e+02 0.01522029
-[13,] 1.000000e+03 0.01611315
-[14,] 3.162278e+03 0.02512517
-[15,] 1.000000e+04 0.14233979
-[16,] 3.162278e+04 0.93392023
-[17,] 1.000000e+05 0.93392023
-'''
-dataset <- read.csv('CD8Tcell_screened2cor.csv')[,-1]
-x <- dataset[,-1]
+total_dataset <- read.csv('CD8Tcell_screen2cor.csv')[,-1]
+dataset <- total_dataset[which(total_dataset$train==1),]
+test <- total_dataset[which(total_dataset$train==0),]
+x <- dataset[,2:411]
 y <- dataset[,1]
-trainerr2 <- g(x,y)
+trainerr <- g(x,y)
 print(c("lambda","train err"))
-print(cbind(lams, trainerr2))
-fit2 <- svm(x,y,scale=F, type='C', kernel='linear',cost=1/lams[11])
-trainpredict <- predict(fit1,x,decision.values=T)
+print(cbind(lams, trainerr))
+fit1 <- svm(x,y,scale=F, type='C', kernel='linear',cost=1/lams[12])
+test_x <- test[,2:411]
+test_y <- test[, 1]
+trainpredict <- predict(fit1,test_x,decision.values=T)
 trainpredict <- as.numeric(trainpredict)
 indep1 <- which(trainpredict==2)
 inden1 <- which(trainpredict==1)
 trainpredict[indep1] <-rep(1,length(indep1))
 trainpredict[inden1] <- rep(-1,length(inden1))
-total <- sum(trainpredict==y)
-tp <- length(intersect(indep1,which(y==1)))
-tn <- length(intersect(inden1,which(y==-1)))
+total <- sum(trainpredict==test_y)
+tp <- length(intersect(indep1,which(test_y==1)))
+tn <- length(intersect(inden1,which(test_y==-1)))
 fp <- length(indep1)-tp
 fn <- length(y)-tp-tn-fp
 tp
 tn
 fp
 fn
+
 ######## file 3 ########
-'''
-print(cbind(lams, trainerr3))
-              lams  trainerr3
- [1,] 1.000000e-03 0.01615487
- [2,] 3.162278e-03 0.01615487
- [3,] 1.000000e-02 0.01615487
- [4,] 3.162278e-02 0.01615487
- [5,] 1.000000e-01 0.01615487
- [6,] 3.162278e-01 0.01615487
- [7,] 1.000000e+00 0.01615487
- [8,] 3.162278e+00 0.01615487
- [9,] 1.000000e+01 0.01615487
-[10,] 3.162278e+01 0.01526202
-[11,] 1.000000e+02 0.01526202
-[12,] 3.162278e+02 0.01258344
-[13,] 1.000000e+03 0.01615487
-[14,] 3.162278e+03 0.02155374
-[15,] 1.000000e+04 0.10297063
-[16,] 3.162278e+04 0.93392023
-[17,] 1.000000e+05 0.93392023
-'''
 dataset <- read.csv('CD8Tcell_screened2sd.csv')[,-1]
+dataset <- dataset[which(dataset$train==1),]
 x <- dataset[,-1]
 y <- dataset[,1]
 trainerr3 <- g(x,y)
