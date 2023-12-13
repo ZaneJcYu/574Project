@@ -1,0 +1,75 @@
+---
+title: "Linear Models"
+author: "Carson Barningham (Sungmin-updated)"
+date: "2023-12-12"
+output: pdf_document
+---
+
+```{r}
+library(dplyr)
+library(stats)
+
+# Seed for reproducibility
+set.seed(1)
+
+# Read in data
+data <- read.csv("CD8Tcell_screened2cor.csv")
+names(data)[2] <- "condition"
+train <- data[which(data$train == 1),]
+test <- data[which(data$train == 0),]
+
+# Get rid of train/test indicators in train and test sets
+train <- select(train, -56)
+test <- select(test, -56)
+```
+
+```{r}
+# forward selection, takes about 3 minutes
+
+linear_model = lm(condition~., data=train[,-1])
+intercept_only = lm(condition ~ 1, data=train[,-1])
+
+n <- nrow(train)
+
+
+both = step(intercept_only, k=log(n), direction='both', scope=list(upper=linear_model, lower=intercept_only), trace=0)
+both
+
+```
+
+```{r echo=TRUE}
+# calculating test error and confusion matrix entries
+
+yhat = predict(both, test[,c(-1,-2)])
+
+confusion <- table(sign(yhat), test[,2])
+
+test_err = 1-sum(diag(confusion)) / length(yhat)
+test_err
+
+
+## Confusion matrix
+confusion
+
+
+## the sensitivity, TPR
+confusion[2,2]/sum(confusion[,2])
+
+## the specificity, TNR
+confusion[1,1]/sum(confusion[,1])
+```
+
+```{r}
+length(both$coefficients)
+
+
+paste(names(both$coefficients), collapse = ", ", sep = ",")
+
+
+set_reference <- c("ISG15", "IF16", "IFIT1", "XAF1", "MX1", "OAS1", "CMPK2", "CXCL10", "CXCL10", "CXCL11", "APOBEC3A", "CCL8")
+
+
+intersect(names(both$coefficients), set_reference)
+```
+
+# ISG15, IFIT1, OAS1 are shared

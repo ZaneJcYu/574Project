@@ -1,31 +1,27 @@
-# README
+## Exploring single-cell perturbation marker genes using classification methods for high-dimensional data
 
-## Description
+### Introduction
+we are going to inspect the performance of classification methods using high-dimensional features.
+We consider aspects of prediction accuarcy and model interpretability based on a particular domain knowledge to
+evaluate the performance for each method in this report.
 
-## Data exploration
+#### Data
+To investigate the performance of our methods, we apply them to a published single-cell transcriptomics data
+from (Kang et al., 2018). The data of Kang et al. (2018) consists of 14,983 samples in a train data file and 2,000
+samples in a test data file with information of seven different cell types and the expression level for 7000 genes.
+For our project, we choose 1115 samples including 541 stimulated and 574 control cells for one cell type, CD8+ T
+cells or cytotoxic T cells (TC), from the files.
+|Cell|Stimulated|Control|Total|
+|---------|---------|---------|---------|
+|CD8+ T cells|541|574|1115|
 
-#### Data source
-
-[scGen predicts single-cell perturbation responses]: https://www.nature.com/articles/s41592-019-0494-8
-
-#### Preprocessing
-
-* Only take data from the file `train_study.h5ad`
-
-* 14983 sample in total, the expression matrix is stored in a sparse matrix, code below is used to convert the sparse matrix to dense matrix.
-
-  ```python
-  import anndata
-  import pandas as pd
-  from scipy.sparse import csr_matrix
-  
-  
-  info = anndata.read('train_study.h5ad')
-  dense_matrix = info.X.toarray()dense_matrix.shape
-  # (14893,7000)
-  ```
-
-* Then get the observation information below:
-
-  * We can get `sample index` , `cell_type`, `condition`, `mt_frac`, `n_counts`, `n_genes`, `percent_mito`, `study`.
-  * From the the `cell type`, after `set()` function, we can see these cell types:`CD8 T cells`,`CD4 T cells`,`B cells`,`FCGR3A+ Monocytes`,`Dendritic cells`,`CD14+ Monocytes`,`NK cells`
+#### Methods
+Here we choose five different classification methods `MARS`,`NSC`,`Linear SVM`, `Sparse SVM` and `Linear Regression Model`.
+The performance of each method on test dataset is in the below:
+|Model|Selected Genes|Test Error|Accuracy|Sensitivity|Specificity|
+|---------|---------|---------|---------|---------|---------|
+|MARS|16|0.03587|0.9641|0.9327|0.9916|
+|NSC|174|0.03139|0.9686|0.9423|0.9916|
+|Sparse Linear SVM with elastic net|356|0.06278|0.9372|0.9038|0.9664|
+|Linear SVM|53|0.03587|0.9641|0.9327|0.9916|
+|Linear Regression with Forward Selection |15|0.02691|0.9731|0.9916|0.9519|
