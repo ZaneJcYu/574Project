@@ -16,6 +16,7 @@ cells or cytotoxic T cells (TC), from the files.
 Here we choose five different classification methods `MARS`,`NSC`,`Linear SVM`, `Sparse SVM` and `Linear Regression Model`.
 The performance of each method on test dataset is in the below:
 |Model|Selected Genes|Test Error|Accuracy|Sensitivity|Specificity|
+|---------|---------|---------|---------|---------|---------|
 |MARS|16|0.03587|0.9641|0.9327|0.9916|
 |NSC|174|0.03139|0.9686|0.9423|0.9916|
 |Sparse Linear SVM with elastic net|356|0.06278|0.9372|0.9038|0.9664|
