@@ -301,19 +301,23 @@ total <- sum(trainpredict==test_y)
 tp <- length(intersect(indep1,which(test_y==1)))
 tn <- length(intersect(inden1,which(test_y==-1)))
 fp <- length(indep1)-tp
-fn <- length(y)-tp-tn-fp
+fn <- length(test_y)-tp-tn-fp
+tp
+tn
+fp
+fn
 
 ######## file 2 ########
-total_dataset <- read.csv('CD8Tcell_screen2cor.csv')[,-1]
+total_dataset <- read.csv('CD8Tcell_screened2cor.csv')[,-1]
 dataset <- total_dataset[which(total_dataset$train==1),]
 test <- total_dataset[which(total_dataset$train==0),]
-x <- dataset[,2:411]
+x <- dataset[,2:54]
 y <- dataset[,1]
 trainerr <- g(x,y)
 print(c("lambda","train err"))
 print(cbind(lams, trainerr))
 fit1 <- svm(x,y,scale=F, type='C', kernel='linear',cost=1/lams[12])
-test_x <- test[,2:411]
+test_x <- test[,2:54]
 test_y <- test[, 1]
 trainpredict <- predict(fit1,test_x,decision.values=T)
 trainpredict <- as.numeric(trainpredict)
@@ -325,7 +329,7 @@ total <- sum(trainpredict==test_y)
 tp <- length(intersect(indep1,which(test_y==1)))
 tn <- length(intersect(inden1,which(test_y==-1)))
 fp <- length(indep1)-tp
-fn <- length(y)-tp-tn-fp
+fn <- length(test_y)-tp-tn-fp
 tp
 tn
 fp
@@ -333,24 +337,27 @@ fn
 
 ######## file 3 ########
 dataset <- read.csv('CD8Tcell_screened2sd.csv')[,-1]
-dataset <- dataset[which(dataset$train==1),]
-x <- dataset[,-1]
+dataset <- total_dataset[which(total_dataset$train==1),]
+test <- total_dataset[which(total_dataset$train==0),]
+x <- dataset[,2:54]
 y <- dataset[,1]
-trainerr3 <- g(x,y)
+trainerr <- g(x,y)
 print(c("lambda","train err"))
-print(cbind(lams, trainerr3))
-fit3 <- svm(x,y,scale=F, type='C', kernel='linear',cost=1/lams[12])
-trainpredict <- predict(fit3,x,decision.values=T)
+print(cbind(lams, trainerr))
+fit1 <- svm(x,y,scale=F, type='C', kernel='linear',cost=1/lams[12])
+test_x <- test[,2:54]
+test_y <- test[, 1]
+trainpredict <- predict(fit1,test_x,decision.values=T)
 trainpredict <- as.numeric(trainpredict)
 indep1 <- which(trainpredict==2)
 inden1 <- which(trainpredict==1)
 trainpredict[indep1] <-rep(1,length(indep1))
 trainpredict[inden1] <- rep(-1,length(inden1))
-total <- sum(trainpredict==y)
-tp <- length(intersect(indep1,which(y==1)))
-tn <- length(intersect(inden1,which(y==-1)))
+total <- sum(trainpredict==test_y)
+tp <- length(intersect(indep1,which(test_y==1)))
+tn <- length(intersect(inden1,which(test_y==-1)))
 fp <- length(indep1)-tp
-fn <- length(y)-tp-tn-fp
+fn <- length(test_y)-tp-tn-fp
 tp
 tn
 fp
