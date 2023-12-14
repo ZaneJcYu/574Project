@@ -1,5 +1,5 @@
-requirement: python 3 and anndata
-datafile: "train_study.h5ad", "valid_study.h5ad"
+Requirement: Python 3 and anndata
+Rawdata: "data/train_study.h5ad", "data/valid_study.h5ad"
 
 
 Brief summary of csv files
