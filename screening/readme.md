@@ -1,6 +1,6 @@
 ## Basic information
 
-Requirement: `Python 3` and `anndata`
+Requirement: `anndata` `Python` module and `anndata` and `Matrix` `R` package
 
 Rawdata: `data/train_study.h5ad`, `data/valid_study.h5ad`
 
