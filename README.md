@@ -13,7 +13,9 @@ For our project, we choose 1115 samples including 541 stimulated and 574 control
 cells or cytotoxic T cells (TC), from the files.
 |Cell|Stimulated|Control|Total|
 |---------|---------|---------|---------|
-|CD8+ T cells|541|574|1115|
+|Whole data|541|574|1115|
+|Train data|437|455|892|
+|Test data|104|119|223|
 
 #### Methods
 Here we choose five different classification methods `MARS`,`NSC`,`Linear SVM`, `Sparse Linear SVM` and `Linear Regression Model`.
