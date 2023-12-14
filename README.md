@@ -20,8 +20,8 @@ Here we choose five different classification methods `MARS`,`NSC`,`Linear SVM`, 
 The performance of each method on test dataset is in the below:
 |Model|Selected Genes|Test Error|Accuracy|Sensitivity|Specificity|
 |---------|---------|---------|---------|---------|---------|
-|MARS|16|0.03587|0.9641|0.9327|0.9916|
-|NSC|174|0.03139|0.9686|0.9423|0.9916|
-|Linear SVM|53|0.03587|0.9641|0.9327|0.9916|
-|Sparse Linear SVM with Elastic net|31|0.03587|0.9641|0.9327|0.9916|
-|Linear Regression Model|15|0.02691|0.9731|0.9519|0.9916|
+|MARS|16|0.0359|0.9641|0.9327|0.9916|
+|NSC|174|0.0314|0.9686|0.9423|0.9916|
+|Linear SVM|53|0.0179|0.9821|0.9712|0.9916|
+|Sparse Linear SVM with Elastic net|31|0.0179|0.9821|0.9712|0.9916|
+|Linear Regression Model|13|0.0359|0.9641|0.9327|0.9916|
